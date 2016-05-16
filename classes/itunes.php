@@ -151,7 +151,54 @@ class itunes
         return $array;
     }
 
+    /**
+     * Write data to a csv file.
+     * 
+     * @static
+     *
+     * @param array  $data 
+     * @param string $filename
+     *
+     */
+    public static function writeToCVS($data, $filename) {
+        if (!file_exists('data')) {
+            mkdir('data', 0777, true);
+        }
 
+        $fp = fopen('data/'.$filename, 'a');
+        fputcsv($fp, $data);
+        fclose($fp);
+    }
 
+    public static function getUserReviewsByAppId($id) {
+        $max_pages = 15;
+        $results = array();
+
+        for ($page_num = 1; $page_num <= $max_pages; $page_num++) {
+            $url = "https://itunes.apple.com/us/rss/customerreviews/page={$page_num}/id={$id}/json";
+
+            // make sure the page is not getting error
+            $handle = curl_init($url);
+            curl_setopt($handle,  CURLOPT_RETURNTRANSFER, TRUE);
+            
+            /* Get the HTML or whatever is linked in $url. */
+            $response = curl_exec($handle);
+            
+            /* Check for 404 (file not found). */
+            $httpCode = curl_getinfo($handle, CURLINFO_HTTP_CODE);
+            if($httpCode == 200) {                
+                $reviews = self::fetchContentFromURL($url)->feed->entry;                
+                if (count($reviews) > 0) {
+                    foreach($reviews as $review) {
+                        array_push($results, $review);    
+                    }
+                }
+            } else {
+                break;
+            }
+        }
+
+        return $results;
+    }
 
 }

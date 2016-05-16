@@ -10,12 +10,29 @@ include('classes/itunes.php');
 
 	$apps = array();
 
-	$fp = fopen('topapps.csv', 'w');
-
+	$header = ['id', 
+	'title', 
+	'category', 
+	'releaseDate', 
+	'userRatingCountForCurrentVersion',
+	'averageUserRatingForCurrentVersion',
+	'trackContentRating',
+	'version',
+	'description',
+	'price',
+	'primaryGenreId',
+	'currentVersionReleaseDate',
+	'averageUserRating',
+	'userRatingCount',
+	'qryURL'
+	];
+	
+	iTunes::writeToCVS($header, 'topapps.csv');
+	
 	foreach($results as $result) {
 		$data = array();
 		$data['id'] = $result->id->attributes->{'im:id'};
-		$data['title'] = $result->title->label;
+		$data['title'] = trim(explode('-', $result->title->label)[0]);
 		$data['category'] = $result->category->attributes->term;
 		$data['relsease_date'] = $result->{'im:releaseDate'}->attributes->label;
 
@@ -33,16 +50,54 @@ include('classes/itunes.php');
 		$data['userRatingCount'] = $appDetails->results[0]->userRatingCount;
 		$data['qryURL'] = 'http://itunes.apple.com/lookup?id='.$data['id'];
 		
-		fputcsv($fp, $data);
+		iTunes::writeToCVS($data, 'topapps.csv');
 		
 
 		// print_r($data);
 
 		// print_r($appDetails);
 		// break;
-	}
-	
-	fclose($fp);
+		$reviews = iTunes::getUserReviewsByAppId($data['id']);
 
+		$u_header = [
+		'appID',
+		'appTitle',
+		'author', 
+		'version',
+		'rating', 
+		'title',
+		'content',
+		'voteSum',
+		'voteCount',
+		'link'
+		];	
+		
+		iTunes::writeToCVS($u_header, $data['title'].'('.$data['id'].').csv');
+		iTunes::writeToCVS($u_header, 'master_reviews.csv');
+	
+		foreach($reviews as $review) {
+
+			$u_data = array();
+			$u_data['appID'] = $data['id'];
+			$u_data['appTitle'] = $data['title'];
+			$u_data['author'] = $review->author->name->label;
+			$u_data['version'] = $review->{'im:version'}->label;
+			$u_data['rating'] = $review->{'im:rating'}->label;
+			$u_data['title'] = $review->title->label;
+			$u_data['content'] = $review->content->label;
+			$u_data['voteSum'] = $review->{'im:voteSum'}->label;
+			$u_data['voteCount'] = $review->{'im:voteCount'}->label;
+			$u_data['link'] = $review->link->attributes->href;
+
+	
+			iTunes::writeToCVS($u_data, $data['title'].'('.$data['id'].').csv');
+			iTunes::writeToCVS($u_data, 'master_reviews.csv');
+		}
+		
+		// print_r($u_data);
+		// break;
+
+
+	}
 
 ?>
