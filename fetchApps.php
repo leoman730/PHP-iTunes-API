@@ -8,6 +8,10 @@ include('classes/itunes.php');
 	//$results = iTunes::fetchContentFromURL('https://itunes.apple.com/us/rss/topfreeapplications/limit=10/genre=6013/json')->feed->entry;
 	$results = iTunes::fetchContentFromURL('https://itunes.apple.com/us/rss/toppaidapplications/limit=10/genre=6013/json')->feed->entry;
 
+	date_default_timezone_set('America/New_York');
+
+	$summary = 'Fetched date: '. date('Y-m-d H:i:s')."\n";
+
 	$apps = array();
 
 	$header = ['id', 
@@ -52,11 +56,8 @@ include('classes/itunes.php');
 		
 		iTunes::writeToCVS($data, 'topapps.csv');
 		
+		$summary .= substr($data['title'], 0, 10)."...({$data['id']})\t\t";
 
-		// print_r($data);
-
-		// print_r($appDetails);
-		// break;
 		$reviews = iTunes::getUserReviewsByAppId($data['id']);
 
 		$u_header = [
@@ -94,10 +95,14 @@ include('classes/itunes.php');
 			iTunes::writeToCVS($u_data, 'master_reviews.csv');
 		}
 		
+		$summary .= ' has '.count($reviews). " reviews\n";
+		
+		iTunes::writeToFile($summary, 'summary.txt');
+
 		// print_r($u_data);
 		// break;
-
-
 	}
+
+	echo $summary;
 
 ?>

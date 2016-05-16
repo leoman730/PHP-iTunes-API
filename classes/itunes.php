@@ -170,6 +170,28 @@ class itunes
         fclose($fp);
     }
 
+
+    /**
+     * Write data to a file.
+     * 
+     * @static
+     *
+     * @param string  $data 
+     * @param string $filename
+     *
+     */
+    public static function writeToFile($data, $filename) {
+        if (!file_exists('data')) {
+            mkdir('data', 0777, true);
+        }
+
+        $fp = fopen('data/'.$filename, 'w');
+        fwrite($fp, $data);
+        fclose($fp);
+    }
+
+
+
     public static function getUserReviewsByAppId($id) {
         $max_pages = 15;
         $results = array();
