@@ -15,7 +15,7 @@
 class itunes
 {
     const API_LOOKUP = 'http://itunes.apple.com/lookup?';
-    const API_SEARCH = 'http://itunes.apple.com/search?';
+    const API_SEARCH = 'http://itunes.apple.com/search?';    
 
     /**
      * The lookup config.
@@ -132,9 +132,26 @@ class itunes
 
         $url .= http_build_query($config);
 
+
         $content = file_get_contents($url);
         $array = json_decode($content);
 
         return $array;
     }
+
+    /**
+     * Get the content from giving url
+     * @static
+     * @param string $url
+     */
+    public static function fetchContentFromURL($url) {
+        $content = file_get_contents($url);
+
+        $array = json_decode($content);
+        return $array;
+    }
+
+
+
+
 }
