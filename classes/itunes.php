@@ -223,4 +223,18 @@ class itunes
         return $results;
     }
 
+
+    public static function showOutput($output) {
+    
+        if (!file_exists('data')) {
+            mkdir('data', 0777, true);
+        }
+
+        $fp = fopen('data/summary.txt', 'a');
+        fwrite($fp, $output);
+        fclose($fp);
+
+        echo $output;
+    }
+
 }

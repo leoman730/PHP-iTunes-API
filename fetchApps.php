@@ -6,14 +6,17 @@ include('classes/itunes.php');
 
 
 	//$results = iTunes::fetchContentFromURL('https://itunes.apple.com/us/rss/topfreeapplications/limit=10/genre=6013/json')->feed->entry;
+	
+	date_default_timezone_set('America/New_York');
+	
+	iTunes::showOutput("Date: ". date('Y-m-d H:i:s')."\n");
+	iTunes::showOutput("Start fetching top 10 applications\n");
+	
 	$results = iTunes::fetchContentFromURL('https://itunes.apple.com/us/rss/toppaidapplications/limit=10/genre=6013/json')->feed->entry;
 
-	date_default_timezone_set('America/New_York');
-
-	$summary = 'Fetched date: '. date('Y-m-d H:i:s')."\n";
-
 	$apps = array();
-
+	$num_reviews = 0;
+	
 	$header = ['id', 
 	'title', 
 	'category', 
@@ -56,7 +59,9 @@ include('classes/itunes.php');
 		
 		iTunes::writeToCVS($data, 'topapps.csv');
 		
-		$summary .= substr($data['title'], 0, 10)."...({$data['id']})\t\t";
+		// $summary .= substr($data['title'], 0, 10)."...({$data['id']})\t\t";
+
+		iTunes::showOutput("Application: ". $data['title']. " (id: {$data['id']})\n");
 
 		$reviews = iTunes::getUserReviewsByAppId($data['id']);
 
@@ -76,33 +81,39 @@ include('classes/itunes.php');
 		iTunes::writeToCVS($u_header, $data['title'].'('.$data['id'].').csv');
 		iTunes::writeToCVS($u_header, 'master_reviews.csv');
 	
+
+		$review_counter = 0;
 		foreach($reviews as $review) {
-
-			$u_data = array();
-			$u_data['appID'] = $data['id'];
-			$u_data['appTitle'] = $data['title'];
-			$u_data['author'] = $review->author->name->label;
-			$u_data['version'] = $review->{'im:version'}->label;
-			$u_data['rating'] = $review->{'im:rating'}->label;
-			$u_data['title'] = $review->title->label;
-			$u_data['content'] = $review->content->label;
-			$u_data['voteSum'] = $review->{'im:voteSum'}->label;
-			$u_data['voteCount'] = $review->{'im:voteCount'}->label;
-			$u_data['link'] = $review->link->attributes->href;
-
-	
-			iTunes::writeToCVS($u_data, $data['title'].'('.$data['id'].').csv');
-			iTunes::writeToCVS($u_data, 'master_reviews.csv');
+			// the first entry usually just content app info, and not include any review content
+			if (isset($review->content)) {
+				$u_data = array();
+				$u_data['appID'] = $data['id'];
+				$u_data['appTitle'] = $data['title'];
+				$u_data['author'] = $review->author->name->label;
+				$u_data['version'] = $review->{'im:version'}->label;
+				$u_data['rating'] = $review->{'im:rating'}->label;
+				$u_data['title'] = $review->title->label;
+				$u_data['content'] = $review->content->label;
+				$u_data['voteSum'] = $review->{'im:voteSum'}->label;
+				$u_data['voteCount'] = $review->{'im:voteCount'}->label;
+				$u_data['link'] = $review->link->attributes->href;
+				
+				$review_counter++;
+				
+				iTunes::writeToCVS($u_data, $data['title'].'('.$data['id'].').csv');
+				iTunes::writeToCVS($u_data, 'master_reviews.csv');				
+			}
 		}
-		
-		$summary .= ' has '.count($reviews). " reviews\n";
-		
-		iTunes::writeToFile($summary, 'summary.txt');
-
+				
+		iTunes::showOutput($review_counter. " reviews\n");
+		$num_reviews = $num_reviews + $review_counter;
 		// print_r($u_data);
 		// break;
 	}
 
-	echo $summary;
+	iTunes::showOutput("Fetching completed at: ". date('Y-m-d H:i:s').".");
+	iTunes::showOutput(" Total number of reviews fetched: ". $num_reviews."\n");
+
+	//echo $summary;
 
 ?>
